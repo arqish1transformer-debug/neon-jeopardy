@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neon Jeopardy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&display=swap">
+<style>
+:root{--bg:#000;--panel:#0b0b0f;--line:#3a3a4a;--text:#fff;--muted:#b9b9cc;
+--n0:#FF9A1F;--n1:#3D9BFF;--n2:#39FF88;--n3:#B266FF;--n4:#FFF22E;--n5:#FF3DD8;--n6:#FF3D55;--n7:#1FFFF0;color-scheme:dark;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:#000;color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.4}
+.neon,.cat,.tile,.big,.nbtn,.word{font-family:Monoton,"Arial Black",Arial,sans-serif;font-weight:400;color:var(--c);text-shadow:0 0 5px var(--c),0 0 16px var(--c),0 0 38px color-mix(in srgb,var(--c) 75%,transparent)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--n7);outline-offset:3px}
+.sub{font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--c);text-shadow:0 0 8px var(--c)}
+/* home */
+.home{min-height:calc(100vh - env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.home h1{margin:0;font-size:clamp(44px,12vw,140px);line-height:1.05}
+.choices{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:18px}
+.nbtn{background:#000;border:3px solid var(--c);border-radius:14px;padding:14px 34px;font-size:clamp(24px,4vw,36px);box-shadow:0 0 14px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 12px color-mix(in srgb,var(--c) 25%,transparent)}
+.nbtn:hover{box-shadow:0 0 26px var(--c),inset 0 0 16px color-mix(in srgb,var(--c) 40%,transparent)}
+.login{width:min(420px,100%);border:2px solid var(--n1);border-radius:14px;padding:18px;box-shadow:0 0 18px color-mix(in srgb,var(--n1) 45%,transparent);text-align:left}
+.login p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.err{color:var(--n6);font-weight:700;margin-top:8px}
+input[type=text],input[type=password],input[type=number],textarea{width:100%;background:#000;border:2px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:6px}
+input:focus,textarea:focus{border-color:var(--n1)}
+textarea{min-height:64px;resize:vertical}
+/* intro */
+.intro{min-height:calc(100vh - env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;cursor:pointer;text-align:center;padding:16px}
+.word{display:flex;flex-wrap:wrap;justify-content:center;font-size:clamp(40px,13vw,170px);line-height:1.1}
+.word span{display:inline-block;opacity:0;animation:on .9s var(--d) forwards,breathe 2.4s calc(var(--d) + 1s) infinite alternate}
+@keyframes on{0%{opacity:0}10%{opacity:1}18%{opacity:.15}30%{opacity:1}42%{opacity:.3}60%,100%{opacity:1}}
+@keyframes breathe{from{text-shadow:0 0 6px var(--c),0 0 14px var(--c)}to{text-shadow:0 0 12px var(--c),0 0 50px var(--c)}}
+.rise{opacity:0;animation:fade 1s 2.6s forwards;font-size:clamp(18px,3vw,28px)}
+@keyframes fade{to{opacity:1}}
+.skip{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px}
+@media (prefers-reduced-motion:reduce){.word span,.rise{animation:none;opacity:1}}
+/* header + tabs */
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 18px}
+header .neon{font-size:clamp(22px,4vw,34px);margin-right:auto}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+.btn,.tab{border:2px solid var(--c,var(--line));background:#000;border-radius:999px;padding:7px 16px;font-weight:700;color:var(--text)}
+.tab[aria-current=true]{background:var(--n5);border-color:var(--n5);color:#000}
+.btn.solid{background:var(--n1);border-color:var(--n1);color:#000}
+.btn.good{background:var(--n2);border-color:var(--n2);color:#000}.btn.bad{background:var(--n6);border-color:var(--n6);color:#000}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+/* board */
+.wrap{padding:0 18px 18px;overflow-x:auto}
+.board{display:grid;gap:10px;min-width:640px}
+.cat{border:2px solid var(--c);border-radius:10px;padding:12px 6px;text-align:center;font-size:clamp(14px,1.9vw,24px);display:flex;align-items:center;justify-content:center;min-height:70px;overflow-wrap:anywhere;line-height:1.15}
+.tile{background:#000;border:3px solid var(--c);border-radius:12px;min-height:88px;font-size:clamp(28px,4vw,46px);box-shadow:0 0 12px color-mix(in srgb,var(--c) 50%,transparent),inset 0 0 10px color-mix(in srgb,var(--c) 22%,transparent)}
+.tile:hover{box-shadow:0 0 26px var(--c),inset 0 0 16px color-mix(in srgb,var(--c) 40%,transparent)}
+.tile.used{border-color:#22222c;box-shadow:none;cursor:default}
+.scores{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:#000;border-top:2px solid #22222c}
+.team{flex:1 1 150px;border:2px solid var(--c);border-radius:12px;padding:6px 12px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 8px;box-shadow:0 0 10px color-mix(in srgb,var(--c) 40%,transparent)}
+.team b{grid-column:1/3;font-size:13px;color:var(--c);text-transform:uppercase;letter-spacing:1px}
+.team .big{font-size:32px}
+.adj{display:flex;gap:4px}.adj button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:#000;font-weight:700;line-height:1}
+.neg{filter:saturate(1.2)}
+/* editor */
+.panel{max-width:900px;margin:0 auto;padding:0 18px 40px}
+.card{background:var(--panel);border:2px solid var(--c,var(--line));border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 0 12px color-mix(in srgb,var(--c,#000) 30%,transparent)}
+.row{display:grid;grid-template-columns:70px 1fr;gap:10px;margin-top:12px}
+.row>label{font-weight:700;color:var(--c);padding-top:8px}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.prev{max-width:240px;max-height:150px;border-radius:8px;display:block;margin-top:6px}
+.hint{color:var(--muted);font-size:14px}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+#modal[hidden]{display:none}
+.dlg{background:#000;border:3px solid var(--c);border-radius:18px;width:min(900px,100%);max-height:100%;overflow:auto;padding:22px;text-align:center;box-shadow:0 0 30px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 20px color-mix(in srgb,var(--c) 18%,transparent)}
+.dlg .big{font-size:clamp(20px,3.4vw,34px)}
+.q{font-size:clamp(24px,4vw,42px);margin:14px 0;font-weight:700;overflow-wrap:anywhere;text-shadow:0 0 12px rgba(255,255,255,.35)}
+.ans{font-size:clamp(22px,3.5vw,36px);color:var(--n7);font-weight:700;margin:10px 0;text-shadow:0 0 12px var(--n7)}
+.dlg img,.dlg video{max-width:100%;max-height:42vh;border-radius:10px;margin:6px auto;display:block}
+.award{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px}
+.award .t{border:2px solid var(--c);border-radius:12px;padding:8px 12px}
+.award .t b{display:block;margin-bottom:6px;color:var(--c)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal" hidden></div>
+<script>
+const NEON=['#FF9A1F','#3D9BFF','#39FF88','#B266FF','#FFF22E','#FF3DD8','#FF3D55','#1FFFF0','#7DFF2E','#FF2E93','#2EFFB4','#FF6BFF'];
+const blank=()=>({q:'',a:'',m:null,used:false});
+const fresh=()=>{const vals=[100,200,300,400,500];const cats=[1,2,3,4,5].map(i=>({name:'Category '+i,clues:vals.map(blank)}));
+cats[0].name='Example';cats[0].clues[0].q='What is the name of the shiny ball that hangs over a dance floor?';cats[0].clues[0].a='What is a disco ball?';
+cats[0].clues[1].q='Which team gets a point for winning this round?';cats[0].clues[1].a='Add your own questions in Edit mode.';
+return{vals,cats,teams:[1,2,3,4].map(i=>({name:'Team '+i,score:0})),pw:null}};
+let S=fresh(),screen='home',mode='play',login=false,err='',cur=null,tab='q',saveT,introT;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col=i=>NEON[i%NEON.length];
+function fsBtn(){return document.fullscreenEnabled?`<button class="btn" data-act="fs">${document.fullscreenElement?'Exit full screen':'Full screen'}</button>`:''}
+function toggleFs(){try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}}
+
+function idb(){return new Promise((ok,no)=>{const r=indexedDB.open('disco-jeopardy',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function load(){try{const db=await idb();return await new Promise(ok=>{const q=db.transaction('s').objectStore('s').get('state');q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)})}catch(e){return null}}
+function save(){clearTimeout(saveT);saveT=setTimeout(async()=>{try{const db=await idb();db.transaction('s','readwrite').objectStore('s').put(S,'state')}catch(e){}},250)}
+async function hash(s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('nj:'+s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return'p:'+btoa(unescape(encodeURIComponent(s)))}}
+
+function go(s){screen=s;clearTimeout(introT);render();if(s==='intro'){const quick=matchMedia('(prefers-reduced-motion:reduce)').matches;introT=setTimeout(()=>go(mode==='edit'?'edit':'play'),quick?1500:4800)}window.scrollTo(0,0)}
+
+function render(){
+  const h=screen==='home'?home():screen==='intro'?intro():screen==='play'?playScreen():editScreen();
+  $('#app').innerHTML=h;
+  const f=$('#pw');if(screen==='home'&&login&&f)f.focus();
+}
+function home(){
+  let l='';
+  if(login){const first=S.pw===null;
+    l=`<div class="login"><p>${first?'Make an edit password so only you can change the questions. Leave it blank for no password. This lock only works on this device and browser.':'Enter the edit password.'}</p>
+    ${S.pw===''?'':`<input type="password" id="pw" placeholder="${first?'New password (optional)':'Password'}" autocomplete="off" aria-label="Password">`}
+    ${first?'<input type="password" id="pw2" placeholder="Type it again" autocomplete="off" aria-label="Confirm password">':''}
+    ${err?`<div class="err" role="alert">${esc(err)}</div>`:''}
+    <div class="inline" style="margin-top:12px"><button class="btn solid" data-act="enter">${first?'Save and edit':'Log in'}</button><button class="btn" data-act="cancel">Back</button></div></div>`;
+  }
+  return `<main class="home"><h1 class="neon" style="--c:var(--n0)">JEOPARDY</h1><div class="sub" style="--c:var(--n5)">Social night</div>
+  <div class="choices"><button class="nbtn" style="--c:var(--n2)" data-act="present">Present</button><button class="nbtn" style="--c:var(--n1)" data-act="loginedit">Edit</button></div>${fsBtn()}${l}</main>`;
+}
+function intro(){
+  const L='JEOPARDY'.split('');
+  return `<div class="intro" data-act="skip" role="button" aria-label="Skip intro"><div class="word" aria-label="Jeopardy">${L.map((ch,i)=>`<span style="--c:${col(i)};--d:${(i*.28).toFixed(2)}s">${ch}</span>`).join('')}</div>
+  <div class="sub rise" style="--c:var(--n5)">${mode==='play'?'Get ready !':'Let’s build the board !'}</div></div>`;
+}
+function board(){
+  const n=S.cats.length;
+  let h=`<div class="wrap"><div class="board" style="grid-template-columns:repeat(${n},minmax(100px,1fr))">`;
+  S.cats.forEach((c,i)=>h+=`<div class="cat" style="--c:${col(i)}">${esc(c.name)||'&nbsp;'}</div>`);
+  S.vals.forEach((v,r)=>S.cats.forEach((c,i)=>{h+=c.clues[r].used?'<div class="tile used"></div>':`<button class="tile" style="--c:${col(i)}" data-act="open" data-c="${i}" data-r="${r}">${v}</button>`}));
+  return h+'</div></div>';
+}
+function playScreen(){
+  return `<header><div class="neon" style="--c:var(--n0)">JEOPARDY</div><button class="btn" data-act="resetboard">Reset board</button>${fsBtn()}<button class="btn" data-act="home">Exit</button></header>${board()}
+  <div class="scores">${S.teams.map((t,i)=>`<div class="team" style="--c:${col(i+1)}"><b>${esc(t.name)}</b><span class="big neon" style="--c:${col(i+1)}">${t.score}</span><div class="adj"><button data-act="adj" data-t="${i}" data-d="-100" aria-label="Take 100 from ${esc(t.name)}">-</button><button data-act="adj" data-t="${i}" data-d="100" aria-label="Give 100 to ${esc(t.name)}">+</button></div></div>`).join('')}</div>`;
+}
+function editScreen(){
+  const tabs=[['q','Questions'],['t','Teams'],['s','Password']];
+  let h=`<header><div class="neon" style="--c:var(--n1)">EDIT</div><nav>${tabs.map(t=>`<button class="tab" data-act="tab" data-v="${t[0]}" ${tab===t[0]?'aria-current="true"':''}>${t[1]}</button>`).join('')}</nav><button class="btn solid" data-act="startplay">Present now</button>${fsBtn()}<button class="btn" data-act="home">Exit</button></header>`;
+  return h+(tab==='q'?editor():tab==='t'?teamsView():passView());
+}
+function passView(){
+  return `<div class="panel"><div class="card" style="--c:var(--n3)"><p class="hint">Change who can open Edit on this device. Leave it blank for no password. This lock is stored in this browser only.</p><input type="password" id="newpw" placeholder="New password (optional)" autocomplete="off" aria-label="New password"><div class="inline" style="margin-top:10px"><button class="btn solid" data-act="savepw">Save password</button></div>${err?`<div class="err" role="alert">${esc(err)}</div>`:''}</div></div>`;
+}
+function teamsView(){
+  return `<div class="panel"><p class="hint">Rename teams, fix a score by hand, or add a team (up to 8).</p>${S.teams.map((t,i)=>`<div class="card inline" style="--c:${col(i+1)}"><input type="text" data-f="tname" data-t="${i}" value="${esc(t.name)}" aria-label="Team name" style="flex:1 1 180px;margin:0"><label class="inline">Score <input type="number" data-f="tscore" data-t="${i}" value="${t.score}" style="width:110px;margin:0"></label><button class="btn" data-act="delteam" data-t="${i}" ${S.teams.length<2?'disabled':''}>Remove</button></div>`).join('')}
+  <div class="inline"><button class="btn solid" data-act="addteam" ${S.teams.length>=8?'disabled':''}>Add team</button><button class="btn" data-act="resetscores">Reset all scores to 0</button></div></div>`;
+}
+function editor(){
+  let h=`<div class="panel"><p class="hint">Changes save automatically in this browser. Add pictures or videos by choosing a file from this device.</p>`;
+  S.cats.forEach((c,i)=>{
+    h+=`<div class="card" style="--c:${col(i)}"><div class="inline"><input type="text" data-f="cname" data-c="${i}" value="${esc(c.name)}" aria-label="Category name" style="flex:1 1 200px;font-weight:700;margin:0"><button class="btn" data-act="delcat" data-c="${i}" ${S.cats.length<2?'disabled':''}>Remove category</button></div>`;
+    c.clues.forEach((k,r)=>{
+      h+=`<div class="row"><label>${S.vals[r]}</label><div><textarea data-f="q" data-c="${i}" data-r="${r}" placeholder="Question or clue" aria-label="Question for ${S.vals[r]}">${esc(k.q)}</textarea>
+      <input type="text" data-f="a" data-c="${i}" data-r="${r}" value="${esc(k.a)}" placeholder="Answer" aria-label="Answer for ${S.vals[r]}">
+      <div class="inline" style="margin-top:8px"><label class="btn" style="cursor:pointer">${k.m?'Replace':'Add'} picture or video<input type="file" accept="image/*,video/*" data-file data-c="${i}" data-r="${r}" hidden></label>${k.m?`<button class="btn" data-act="clearmedia" data-c="${i}" data-r="${r}">Remove media</button>`:''}</div>
+      ${k.m?(k.m.t==='image'?`<img class="prev" src="${k.m.d}" alt="">`:`<video class="prev" src="${k.m.d}" controls></video>`):''}</div></div>`;
+    });
+    h+='</div>';
+  });
+  return h+`<div class="card"><div class="inline"><button class="btn solid" data-act="addcat" ${S.cats.length>=6?'disabled':''}>Add category</button><button class="btn" data-act="addrow">Add a row</button><button class="btn" data-act="delrow" ${S.vals.length<2?'disabled':''}>Remove last row</button></div>
+  <div class="inline" style="margin-top:12px"><span class="hint">Point values:</span>${S.vals.map((v,r)=>`<input type="number" data-f="val" data-r="${r}" value="${v}" aria-label="Value for row ${r+1}" style="width:90px;margin:0">`).join('')}</div></div></div>`;
+}
+
+function openClue(c,r){cur={c,r,shown:false,wrong:[]};showModal()}
+function showModal(){
+  const{c,r,shown,wrong}=cur,k=S.cats[c].clues[r],v=S.vals[r],m=$('#modal');
+  const media=k.m?(k.m.t==='image'?`<img src="${k.m.d}" alt="">`:`<video src="${k.m.d}" controls></video>`):'';
+  m.hidden=false;
+  m.innerHTML=`<div class="dlg" style="--c:${col(c)}" role="dialog" aria-modal="true" aria-label="Question"><div class="big neon" style="--c:${col(c)}">${esc(S.cats[c].name)} ${v}</div>${media}
+  <div class="q">${k.q?esc(k.q):'No question yet. Add one in Edit mode.'}</div>
+  ${shown?`<div class="ans">${esc(k.a)||'No answer entered'}</div>`:`<button class="btn solid" data-act="reveal">Show answer</button>`}
+  <div class="award">${S.teams.map((t,i)=>`<div class="t" style="--c:${col(i+1)}"><b>${esc(t.name)}</b><button class="btn good" data-act="right" data-t="${i}">+${v}</button> <button class="btn bad" data-act="wrong" data-t="${i}" ${wrong.includes(i)?'disabled':''}>-${v}</button></div>`).join('')}</div>
+  <div class="inline" style="justify-content:center;margin-top:16px"><button class="btn" data-act="skipq">Nobody got it</button><button class="btn" data-act="close">Back to board</button></div></div>`;
+}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML='';cur=null}
+
+async function enter(){
+  const a=$('#pw'),b=$('#pw2');
+  if(S.pw===null){const p=a?a.value:'';if(b&&p!==b.value){err='The two passwords don’t match.';return render()}S.pw=p?await hash(p):'';save();}
+  else if(S.pw!==''){if(await hash(a.value)!==S.pw){err='That password is not right. Try again.';return render()}}
+  err='';login=false;mode='edit';tab='q';go('intro');
+}
+
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');
+  if(!b){if(e.target.id==='modal')closeModal();return}
+  const a=b.dataset.act,c=+b.dataset.c,r=+b.dataset.r,t=+b.dataset.t;
+  if(a==='present'){mode='play';login=false;return go('intro')}
+  if(a==='loginedit'){login=true;err='';if(S.pw===''){return enter()}return render()}
+  if(a==='cancel'){login=false;err='';return render()}
+  if(a==='enter')return enter();
+  if(a==='fs')return toggleFs();
+  if(a==='skip'){return go(mode==='edit'?'edit':'play')}
+  if(a==='home'){login=false;return go('home')}
+  if(a==='startplay'){mode='play';return go('play')}
+  if(a==='open')return openClue(c,r);
+  if(a==='reveal'){cur.shown=true;return showModal()}
+  if(a==='right'){S.teams[t].score+=S.vals[cur.r];S.cats[cur.c].clues[cur.r].used=true;closeModal()}
+  else if(a==='wrong'){S.teams[t].score-=S.vals[cur.r];cur.wrong.push(t);save();render();return showModal()}
+  else if(a==='skipq'){S.cats[cur.c].clues[cur.r].used=true;closeModal()}
+  else if(a==='close')return closeModal();
+  else if(a==='tab'){tab=b.dataset.v;err=''}
+  else if(a==='adj'){S.teams[t].score+=+b.dataset.d}
+  else if(a==='savepw'){const p=$('#newpw').value;S.pw=p?await hash(p):'';err=p?'Password saved.':'Password removed. Anyone on this device can open Edit.'}
+  else if(a==='resetboard'){S.cats.forEach(x=>x.clues.forEach(k=>k.used=false))}
+  else if(a==='resetscores'){if(!confirm('Set every team’s score back to 0?'))return;S.teams.forEach(x=>x.score=0)}
+  else if(a==='addteam'){S.teams.push({name:'Team '+(S.teams.length+1),score:0})}
+  else if(a==='delteam'){S.teams.splice(t,1)}
+  else if(a==='addcat'){S.cats.push({name:'Category '+(S.cats.length+1),clues:S.vals.map(blank)})}
+  else if(a==='delcat'){if(!confirm('Remove this category and its questions?'))return;S.cats.splice(c,1)}
+  else if(a==='addrow'){S.vals.push(S.vals[S.vals.length-1]+100);S.cats.forEach(x=>x.clues.push(blank()))}
+  else if(a==='delrow'){if(!confirm('Remove the last row and its questions?'))return;S.vals.pop();S.cats.forEach(x=>x.clues.pop())}
+  else if(a==='clearmedia'){S.cats[c].clues[r].m=null}
+  save();render();
+});
+document.addEventListener('input',e=>{
+  const d=e.target.dataset,f=d.f;if(!f)return;const c=+d.c,r=+d.r,t=+d.t,v=e.target.value;
+  if(f==='q')S.cats[c].clues[r].q=v;else if(f==='a')S.cats[c].clues[r].a=v;
+  else if(f==='cname')S.cats[c].name=v;else if(f==='tname')S.teams[t].name=v;
+  else if(f==='tscore')S.teams[t].score=parseInt(v)||0;else if(f==='val')S.vals[r]=parseInt(v)||0;
+  save();
+});
+document.addEventListener('change',e=>{
+  const el=e.target;if(!el.hasAttribute('data-file')||!el.files[0])return;
+  const file=el.files[0],c=+el.dataset.c,r=+el.dataset.r;
+  if(file.size>80*1024*1024){alert('That file is over 80 MB. Choose a smaller picture or video.');return}
+  const rd=new FileReader();
+  rd.onload=()=>{S.cats[c].clues[r].m={t:file.type.startsWith('video')?'video':'image',d:rd.result};save();render()};
+  rd.onerror=()=>alert('Could not read that file. Try another one.');
+  rd.readAsDataURL(file);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&cur)closeModal();
+  if((e.key==='f'||e.key==='F')&&screen!=='home'&&screen!=='intro'&&!/INPUT|TEXTAREA/.test(e.target.tagName))toggleFs();
+  if(e.key==='Enter'&&screen==='home'&&login&&e.target.type==='password')enter();
+  if((e.key===' '||e.key==='Enter')&&screen==='intro'&&e.target.tagName!=='BUTTON'){e.preventDefault();go(mode==='edit'?'edit':'play')}
+});
+document.addEventListener('fullscreenchange',()=>{if(screen!=='intro')render()});
+load().then(s=>{if(s&&s.cats&&s.teams&&s.vals){S=s;if(!('pw' in S))S.pw=null}if(screen==='home')render()});
+render();
+</script>
+</body>
+</html>
